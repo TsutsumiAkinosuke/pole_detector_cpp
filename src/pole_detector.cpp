@@ -66,12 +66,10 @@ class PoleDetector : public rclcpp::Node
                     msg.ranges[i] = std::numeric_limits<float>::quiet_NaN();
 
                     // もし一つ前のデータがNaNでないなら
-                    if(!std::isnan(msg.ranges[i-1]))
-                    {
+                    if(!std::isnan(msg.ranges[i-1])){
                         temp_last_index = i;
                         // もし保存されているクラスタより現在のクラスタが長ければ更新
-                        if (index_range < temp_last_index - temp_start_index)
-                        {
+                        if (index_range < temp_last_index - temp_start_index){
                             start_index = temp_start_index;
                             last_index = temp_last_index;
                             index_range = temp_last_index - temp_start_index;
@@ -91,7 +89,7 @@ class PoleDetector : public rclcpp::Node
                 temp_last_index = msg.ranges.size();
 
                 // もし保存されているクラスタより現在のクラスタが長ければ更新
-                if (index_range > temp_last_index - temp_start_index)
+                if (index_range < temp_last_index - temp_start_index)
                 {
                     start_index = temp_start_index;
                     last_index = temp_last_index;
