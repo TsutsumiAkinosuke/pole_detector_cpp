@@ -49,7 +49,10 @@ class PoleDetector : public rclcpp::Node
             int temp_start_index = 0;
             int temp_last_index = 0;
 
-            if (msg.ranges[0] < scan_min || scan_max < msg.ranges[0]){
+            if (std::isnan(msg.ranges[0])){
+                // NaNなら無視
+                ;
+            }else if(msg.ranges[0] < scan_min || scan_max < msg.ranges[0]){
                 // NaNに置き換え
                 msg.ranges[0] = std::numeric_limits<float>::quiet_NaN();
             }else{
@@ -60,11 +63,7 @@ class PoleDetector : public rclcpp::Node
             // 指定範囲外のデータをNaNに置き換えながら最も大きいクラスタを探す
             for(int i = 1; i < int(msg.ranges.size()); i++)
             {
-                if (msg.ranges[i] < scan_min || scan_max < msg.ranges[i]){
-
-                    // NaNに置き換え
-                    msg.ranges[i] = std::numeric_limits<float>::quiet_NaN();
-
+                if (std::isnan(msg.ranges[i])){
                     // もし一つ前のデータがNaNでないなら
                     if(!std::isnan(msg.ranges[i-1])){
                         temp_last_index = i;
@@ -75,7 +74,20 @@ class PoleDetector : public rclcpp::Node
                             index_range = temp_last_index - temp_start_index;
                         }
                     }
-                }else{
+                }else if(msg.ranges[i] < scan_min || scan_max < msg.ranges[i]){
+                    // NaNに置き換え
+                    msg.ranges[i] = std::numeric_limits<float>::quiet_NaN();
+                    // もし一つ前のデータがNaNでないなら
+                    if(!std::isnan(msg.ranges[i-1])){
+                        temp_last_index = i;
+                        // もし保存されているクラスタより現在のクラスタが長ければ更新
+                        if (index_range < temp_last_index - temp_start_index){
+                            start_index = temp_start_index;
+                            last_index = temp_last_index;
+                            index_range = temp_last_index - temp_start_index;
+                        }
+                    }
+                } else {
                     // もし一つ前のデータがNaNならクラスタの端として一時保存
                     if (std::isnan(msg.ranges[i-1])){
                         temp_start_index = i;
@@ -118,7 +130,7 @@ class PoleDetector : public rclcpp::Node
 
                 RCLCPP_INFO(this->get_logger(), "rad:'%f' range:'%f' distance:'%f'", center_angle, center_range, distance_msg.data);
             }else{
-                RCLCPP_INFO(this->get_logger(), "Cluster not found.");
+        RCLCPP_INFO(this->get_logger(), "Cluster not found.");
             }
         }
 
